@@ -41,3 +41,29 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
 ### Verify Your Install
 - `curl -X GET http://localhost:9200`
 
+### Install Kibana
+- `sudo apt install kibana=7.17.29`
+
+### Configure Kibana
+- Open kibana config file
+    - Adjust network settings and elasticsearch settings
+    - Ensure to set `network.host` to `0.0.0.0`
+    - Ensure to put the actual IP or hostname of your elasticsearch server.
+
+### Enable and Start Kibana
+- `sudo systemctl daemon-reload`
+- `sudo systemctl enable kibana`
+- `sudo systemctl start kibana`
+
+### Verify Your Install
+- Go to the webpage
+    - http://localhost:5601
+- ***It may take a minute for it to register***
+
+
+### Install Logstash
+- `sudo apt install logstash`
+
+### Configure Logstash
+
+### Set-up rsyslogd to ingest firewall logs
