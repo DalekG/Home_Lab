@@ -18,7 +18,7 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
 
 ### Install elasticsearch
 - Import the Elasticsearch GPG Key
-    - `wget -qO https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -`
+    - `wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -`
 - Add the elastic APT repository
     - `sudo echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" > /etc/apt/sources.list.d/elastic-7.x.list`
 - If you are running multiple servers (e.g Elasticsearch vm#1 and logstash,kibana,etc vm#2) you need to complete everything above this line for every server.
