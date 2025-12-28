@@ -1,0 +1,168 @@
+# pfSense
+{
+  "description": "Pipeline for parsing pfSense firewall logs",
+  "processors": [
+    {
+      "grok": {
+        "field": "message",
+        "patterns": [
+          "%{TIMESTAMP_ISO8601:pfsense.timestamp} %{SYSLOGHOST:host.hostname} %{DATA:process.name}\\[%{POSINT:process.pid:int}\\]: %{GREEDYDATA:pfsense.raw_message}"
+        ],
+        "ignore_failure": true
+      }
+    },
+    {
+      "date": {
+        "field": "pfsense.timestamp",
+        "formats": ["ISO8601"],
+        "target_field": "@timestamp",
+        "ignore_failure": true
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.raw_message",
+        "pattern": "%{pfsense.rule_number},%{pfsense.sub_rule},%{pfsense.anchor},%{pfsense.tracker},%{network.interface},%{pfsense.reason},%{event.action},%{network.direction},%{network.ip_version},%{pfsense.remaining}",
+        "ignore_failure": true,
+        "if": "ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.remaining",
+        "pattern": "%{pfsense.tos},%{pfsense.ecn},%{pfsense.ttl},%{pfsense.id},%{pfsense.offset},%{pfsense.flags},%{network.iana_number},%{network.transport},%{pfsense.length},%{source.ip},%{destination.ip},%{pfsense.proto_data}",
+        "ignore_failure": true,
+        "if": "ctx.network?.ip_version == '4' && ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.remaining",
+        "pattern": "%{pfsense.class},%{pfsense.flow_label},%{pfsense.hop_limit},%{network.transport},%{network.iana_number},%{pfsense.length},%{source.ip},%{destination.ip},%{pfsense.proto_data}",
+        "ignore_failure": true,
+        "if": "ctx.network?.ip_version == '6' && ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.proto_data",
+        "pattern": "%{source.port},%{destination.port},%{pfsense.data_length}",
+        "ignore_failure": true,
+        "if": "ctx.network?.transport == 'udp'"
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.proto_data",
+        "pattern": "%{source.port},%{destination.port},%{pfsense.data_length},%{pfsense.tcp_flags},%{pfsense.sequence},%{pfsense.ack},%{pfsense.window},%{pfsense.urg},%{pfsense.options}",
+        "ignore_failure": true,
+        "if": "ctx.network?.transport == 'tcp'"
+      }
+    },
+    {
+      "dissect": {
+        "field": "pfsense.proto_data",
+        "pattern": "%{pfsense.icmp_type},%{pfsense.icmp_code}",
+        "ignore_failure": true,
+        "if": "ctx.network?.transport == 'icmp'"
+      }
+    },
+    {
+      "convert": {
+        "field": "source.port",
+        "type": "integer",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "destination.port",
+        "type": "integer",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "pfsense.length",
+        "type": "integer",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "pfsense.data_length",
+        "type": "integer",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "convert": {
+        "field": "pfsense.ttl",
+        "type": "integer",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "set": {
+        "field": "event.kind",
+        "value": "event",
+        "if": "ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "set": {
+        "field": "event.category",
+        "value": ["network"],
+        "if": "ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "set": {
+        "field": "event.type",
+        "value": ["connection"],
+        "if": "ctx.process?.name == 'filterlog'"
+      }
+    },
+    {
+      "set": {
+        "field": "event.outcome",
+        "value": "success",
+        "if": "ctx.event?.action == 'pass'"
+      }
+    },
+    {
+      "set": {
+        "field": "event.outcome",
+        "value": "failure",
+        "if": "ctx.event?.action == 'block'"
+      }
+    },
+    {
+      "geoip": {
+        "field": "source.ip",
+        "target_field": "source.geo",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "geoip": {
+        "field": "destination.ip",
+        "target_field": "destination.geo",
+        "ignore_missing": true,
+        "ignore_failure": true
+      }
+    },
+    {
+      "remove": {
+        "field": ["pfsense.remaining", "pfsense.proto_data", "pfsense.raw_message", "pfsense.timestamp"],
+        "ignore_missing": true
+      }
+    }
+  ]
+}

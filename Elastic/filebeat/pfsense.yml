@@ -1,0 +1,93 @@
+# pfSense Filebeat Configuration
+# Save to: /usr/local/etc/filebeat.yml (on pfSense)
+# or /etc/filebeat/filebeat.yml (on standard Linux)
+
+# Firewall filter logs
+filebeat.inputs:
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/filter.log
+      - /var/log/pfsense.log
+
+    fields:
+      log_type: firewall
+    fields_under_root: false
+
+    # Exclude empty lines
+    exclude_lines: ['^$']
+
+  # System logs (auth, services, dhcp, vpn)
+  - type: log
+    enabled: true
+    paths:
+      - /var/log/system.log
+
+    fields:
+      log_type: system
+    fields_under_root: false
+
+    exclude_lines: ['^$']
+
+  # DHCP logs (if separate)
+  - type: log
+    enabled: false
+    paths:
+      - /var/log/dhcpd.log
+
+    fields:
+      log_type: dhcp
+    fields_under_root: false
+
+  # OpenVPN logs (if separate)
+  - type: log
+    enabled: false
+    paths:
+      - /var/log/openvpn.log
+
+    fields:
+      log_type: vpn
+    fields_under_root: false
+
+# Output directly to Elasticsearch with ingest pipeline
+output.elasticsearch:
+  hosts: ["http://your-elasticsearch-ip:9200"]
+  pipeline: "pfsense-firewall"
+  index: "pfsense-%{+yyyy.MM.dd}"
+
+  # If authentication is enabled
+  # username: "elastic"
+  # password: "your_password"
+
+  # For HTTPS
+  # protocol: "https"
+  # ssl.verification_mode: "none"
+
+# Disable ILM for simple daily indices
+setup.ilm.enabled: false
+
+# Index template settings
+setup.template.name: "pfsense"
+setup.template.pattern: "pfsense-*"
+setup.template.settings:
+  index.number_of_shards: 1
+  index.number_of_replicas: 1
+
+# Kibana connection (for loading dashboards)
+setup.kibana:
+  host: "http://your-kibana-ip:5601"
+
+# Logging
+logging.level: info
+logging.to_files: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  permissions: 0644
+
+# Processors
+processors:
+  - add_host_metadata:
+      netinfo.enabled: true
+  - add_locale: ~
