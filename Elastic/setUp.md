@@ -29,6 +29,17 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
 - Open elasticsearch config file
     - `sudo vim /etc/elasticsearch/elasticsearch.yml`
     - Make any network or memory setting adjustments that you need to
+- Add these lines to elasticsearch.yml:
+    ```
+    cluster.name: elastic-cluster
+    node.name: elastic-node-1
+    network.host: 0.0.0.0
+    http.port: 9200
+    discovery.type: single-node
+    xpack.security.enabled: true
+    xpack.security.authc.api_key.enabled: true
+    xpack.security.authc.token.enabled: true
+    ```
 - Open jvm config file
     - `sudo vim /etc/elasticsearch/jvm.options`
     - Adjust heap size as needed
@@ -49,6 +60,15 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
     - Adjust network settings and elasticsearch settings
     - Ensure to set `network.host` to `0.0.0.0`
     - Ensure to put the actual IP or hostname of your elasticsearch server.
+- Add these settings to your file:
+    - `xpack.security.enabled: true`
+    - `xpack.fleet.enabled: true`
+    - `xpack.encryptedSavedObjects.encryptionKey: "<your-key-here>"`
+    - `xpack.reporting.encryptionKey: "<your-key-here>"`
+    - `xpack.security.encryptionKey: "<your-key-here>"`
+- To generate your encryption keys you need to run the following command:
+    - sudo /usr/share/kibana/generate-encryption-keys generate
+    - copy the keys and fill them into kibana.yml
 
 ### Enable and Start Kibana
 - `sudo systemctl daemon-reload`
@@ -66,25 +86,3 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
 
 ### Configure Logstash
 
-### Set-up rsyslogd to ingest firewall logs
-- Edit rsyslog configuration
-    - `sudo vim /etc/rsyslog.conf`
-    - Uncomment UDP/TCP configs
-- Restart rsyslog
-    - `sudo systemctl restart rsyslog`
-- Add rule to catch firewall traffic
-    - `if $fromhost-ip == '< ip address >' then /var/log/pfsense.log`
-    - `if $fromhost-ip == '192.168.1.1' then { action(type="omfile" file="/var/log/pfsense.log") stop }`
-
-### Install Filebeat
-- `sudo apt install filebeat`
-
-### Set-up Modules.d config
-- `vim pfsense.yml`
-- `- module: system`
-- `syslog:`
--   `enabled: true`
--   `var.paths: ["/var/log/pfsense.log"]`
-
-
-### Check the magic in the SIEM
