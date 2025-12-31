@@ -43,6 +43,9 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
 - Open jvm config file
     - `sudo vim /etc/elasticsearch/jvm.options`
     - Adjust heap size as needed
+- Create passwords:
+    - `sudo /usr/share/elasticsearch/bin/elasticsearch-setup-passwords interactive`
+    - Set passwords for all
 
 ### Start and Enable Elasticsearch
 - `sudo systemctl daemon-reload`
@@ -61,11 +64,15 @@ I will be running Elastic 7.17 on Ubuntu 20.04 for this home lab set-up. Once I 
     - Ensure to set `network.host` to `0.0.0.0`
     - Ensure to put the actual IP or hostname of your elasticsearch server.
 - Add these settings to your file:
-    - `xpack.security.enabled: true`
-    - `xpack.fleet.enabled: true`
-    - `xpack.encryptedSavedObjects.encryptionKey: "<your-key-here>"`
-    - `xpack.reporting.encryptionKey: "<your-key-here>"`
-    - `xpack.security.encryptionKey: "<your-key-here>"`
+    ```
+    elasticsearch.username: "kibana_system"
+    elasticsearch.password: "pass"
+    xpack.security.enabled: true
+    xpack.fleet.enabled: true
+    xpack.encryptedSavedObjects.encryptionKey: "<your-key-here>"
+    xpack.reporting.encryptionKey: "<your-key-here>"
+    xpack.security.encryptionKey: "<your-key-here>"
+    ```
 - To generate your encryption keys you need to run the following command:
     - sudo /usr/share/kibana/generate-encryption-keys generate
     - copy the keys and fill them into kibana.yml
