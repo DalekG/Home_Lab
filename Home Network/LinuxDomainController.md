@@ -29,3 +29,17 @@ I used wiki.samba.org/index.php/Setting_up_Samba_as_an_Active_Directory_Domain_C
         ```
         sudo apt install samba -y
         ```
+    - Create Samba AD
+        ```
+        sudo samba-tools domain provision --interactive
+        ```
+        - With the hostname set correctly, you can <enter> through most of the settings
+        - For more details follow the wiki for setting up your variables
+
+    - Configure DNS Resolver
+        - `vim /etc/resolv.conf`
+        - change nameserver
+        - change search (to your domain)
+    
+    - Configure Kerberos
+        - `cp /et
